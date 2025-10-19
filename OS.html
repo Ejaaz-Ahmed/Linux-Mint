@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Mint Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
+        
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .slides-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+        
+        /* Custom scrollbar */
+        .slide::-webkit-scrollbar {
+            width: 15px;
+        }
+        
+        .slide::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .slide::-webkit-scrollbar-thumb {
+            background: rgba(44, 90, 160, 0.7);
+            border-radius: 10px;
+        }
+        
+        .slide::-webkit-scrollbar-thumb:hover {
+            background: rgba(44, 90, 160, 0.9);
+        }
+        
+        .slide-content-wrapper {
+            padding: 50px 70px;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .slide-header {
+            margin-bottom: 40px;
+            flex-shrink: 0;
+        }
+        
+        .slide h1 {
+            font-size: 3.5em;
+            color: #1a3a52;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .slide .subtitle {
+            font-size: 1.8em;
+            color: #2c5aa0;
+            font-weight: 400;
+        }
+        
+        .slide-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        /* Title Slide */
+        .slide.title-slide {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .slide.title-slide .slide-content-wrapper {
+            padding: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: auto;
+        }
+        
+        .slide.title-slide h1 {
+            font-size: 5em;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+        }
+        
+        .slide.title-slide .subtitle {
+            font-size: 2.5em;
+            color: #f0f0f0;
+            margin-bottom: 60px;
+        }
+        
+        .title-content {
+            background: rgba(255,255,255,0.15);
+            padding: 50px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 1.5em;
+            line-height: 1.8;
+            max-width: 800px;
+        }
+        
+        /* Layer Block */
+        .layer {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 8px solid;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            font-size: 1.2em;
+        }
+        
+        .layer.user-space {
+            border-left-color: #4CAF50;
+            background: linear-gradient(135deg, rgba(76,175,80,0.08) 0%, rgba(76,175,80,0.02) 100%);
+        }
+        
+        .layer.syscall {
+            border-left-color: #FF9800;
+            background: linear-gradient(135deg, rgba(255,152,0,0.08) 0%, rgba(255,152,0,0.02) 100%);
+        }
+        
+        .layer.kernel {
+            border-left-color: #2196F3;
+            background: linear-gradient(135deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%);
+        }
+        
+        .layer.arch {
+            border-left-color: #9C27B0;
+            background: linear-gradient(135deg, rgba(156,39,176,0.08) 0%, rgba(156,39,176,0.02) 100%);
+        }
+        
+        .layer.hardware {
+            border-left-color: #FF5722;
+            background: linear-gradient(135deg, rgba(255,87,34,0.08) 0%, rgba(255,87,34,0.02) 100%);
+        }
+        
+        .layer-title {
+            font-weight: 700;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #1a3a52;
+        }
+        
+        .layer-content {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .component-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .component {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            border: 2px solid #2196F3;
+            font-weight: 600;
+            text-align: center;
+            font-size: 1em;
+        }
+        
+        /* Scheduler Section */
+        .schedulers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .scheduler-box {
+            background: white;
+            border-radius: 15px;
+            padding: 35px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.15);
+            border-top: 6px solid;
+        }
+        
+        .scheduler-box.long-term {
+            border-top-color: #4CAF50;
+        }
+        
+        .scheduler-box.mid-term {
+            border-top-color: #2196F3;
+        }
+        
+        .scheduler-box.short-term {
+            border-top-color: #FF6B6B;
+        }
+        
+        .scheduler-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1a3a52;
+        }
+        
+        .scheduler-content {
+            font-size: 1.05em;
+            line-height: 1.7;
+            color: #444;
+        }
+        
+        .scheduler-content strong {
+            display: block;
+            margin-top: 12px;
+            color: #1a3a52;
+            font-size: 1.1em;
+        }
+        
+        /* PCB Grid */
+        .pcb-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .pcb-box {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 3px solid;
+        }
+        
+        .pcb-box h3 {
+            font-size: 1.3em;
+            margin-bottom: 18px;
+            color: #1a3a52;
+        }
+        
+        .pcb-box ul {
+            list-style: none;
+            font-size: 1em;
+            line-height: 1.7;
+            color: #333;
+        }
+        
+        .pcb-box li:before {
+            content: "► ";
+            color: #FF6B6B;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .pcb-box:nth-child(1) {
+            border-color: #FF6B6B;
+        }
+        
+        .pcb-box:nth-child(2) {
+            border-color: #4ECDC4;
+        }
+        
+        .pcb-box:nth-child(3) {
+            border-color: #FFE66D;
+        }
+        
+        .pcb-box:nth-child(4) {
+            border-color: #A78BFA;
+        }
+        
+        .context-note {
+            background: #FFF3E0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 6px solid #E65100;
+        }
+        
+        .context-note strong {
+            font-size: 1.2em;
+            color: #E65100;
+        }
+        
+        .context-note p {
+            font-size: 1.1em;
+            color: #333;
+            margin-top: 10px;
+        }
+        
+        /* Thread Section */
+        .threads-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        
+        .thread-box {
+            background: white;
+            border-radius: 15px;
+            padding: 35px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.15);
+        }
+        
+        .thread-box h3 {
+            font-size: 1.6em;
+            font-weight: 700;
+            margin-bottom: 25px;
+            padding-bottom: 18px;
+            border-bottom: 4px solid;
+        }
+        
+        .thread-box.kernel h3 {
+            border-bottom-color: #7B1FA2;
+            color: #7B1FA2;
+        }
+        
+        .thread-box.user h3 {
+            border-bottom-color: #1976D2;
+            color: #1976D2;
+        }
+        
+        .thread-section {
+            margin-bottom: 25px;
+        }
+        
+        .thread-section-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #1a3a52;
+            margin-bottom: 12px;
+        }
+        
+        .thread-section ul {
+            list-style: none;
+            font-size: 1em;
+            line-height: 1.7;
+            color: #333;
+            margin-left: 10px;
+        }
+        
+        .thread-section li:before {
+            content: "◆ ";
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        
+        .thread-box.kernel .thread-section li:before {
+            color: #7B1FA2;
+        }
+        
+        .thread-box.user .thread-section li:before {
+            color: #1976D2;
+        }
+        
+        /* Navigation */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 50px;
+            background: rgba(0,0,0,0.5);
+            height: 80px;
+            z-index: 1000;
+        }
+        
+        .nav-button {
+            background: #2c5aa0;
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-weight: 600;
+        }
+        
+        .nav-button:hover:not(:disabled) {
+            background: #1a3a52;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        
+        .nav-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .slide-counter {
+            font-size: 1.3em;
+            color: white;
+            background: rgba(44, 90, 160, 0.9);
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+        }
+        
+        .slide-dots {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid white;
+        }
+        
+        .dot:hover {
+            background: rgba(255,255,255,0.8);
+        }
+        
+        .dot.active {
+            background: #2c5aa0;
+            width: 35px;
+            border-radius: 8px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .slide-content-wrapper {
+                padding: 30px 40px;
+            }
+            
+            .slide h1 {
+                font-size: 2.5em;
+            }
+            
+            .slide .subtitle {
+                font-size: 1.3em;
+            }
+            
+            .layer {
+                font-size: 1em;
+                padding: 20px;
+            }
+            
+            .layer-title {
+                font-size: 1.2em;
+            }
+            
+            .controls {
+                flex-direction: column;
+                padding: 15px 20px;
+                height: auto;
+                gap: 15px;
+            }
+            
+            .nav-button {
+                padding: 12px 25px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation">
+        <div class="slides-container">
+            <!-- Slide 1: Title -->
+            <div class="slide title-slide active">
+                <div class="slide-content-wrapper">
+                    <div>
+                        <h1>🐧 Linux Mint</h1>
+                        <p class="subtitle">A User-Friendly Linux Distribution</p>
+                        <div class="title-content">
+                            <p><strong>Architecture Overview & Process Scheduling</strong></p>
+                            <p style="margin-top: 30px;">Understanding the Layered Design and Kernel Management</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Slide 2: Architecture -->
+            <div class="slide">
+                <div class="slide-content-wrapper">
+                    <div class="slide-header">
+                        <h1>Linux Mint Architecture Layers</h1>
+                        <p class="subtitle">From User Space to Hardware</p>
+                    </div>
+                    
+                    <div class="slide-body">
+                        <div class="layer user-space">
+                            <div class="layer-title">🖥️ User Space</div>
+                            <div class="layer-content">
+                                Graphical Desktop Environments (Cinnamon, MATE, XFCE) | System Tools (mintupdate, timeshift) | Applications & Libraries (glibc)
+                            </div>
+                        </div>
+                        
+                        <div class="layer syscall">
+                            <div class="layer-title">🔗 System Call Interface</div>
+                            <div class="layer-content">
+                                Bridge between User Space and Kernel | Handles: fork(), open(), read(), write(), execve()
+                            </div>
+                        </div>
+                        
+                        <div class="layer kernel">
+                            <div class="layer-title">⚙️ Kernel Core & Subsystems (Kernel Mode)</div>
+                            <div class="component-row">
+                                <div class="component">📊 Process Scheduler (CFS)</div>
+                                <div class="component">💾 Memory Manager</div>
+                                <div class="component">📁 Virtual File System</div>
+                                <div class="component">🔌 Device Drivers</div>
+                                <div class="component">🌐 Networking Stack</div>
+                                <div class="component">⚡ Interrupt Handlers</div>
+                            </div>
+                        </div>
+                        
+                        <div class="layer arch">
+                            <div class="layer-title">🏗️ Architecture-Specific Code</div>
+                            <div class="layer-content">
+                                IRQ Handling | Bootstrap Process | x86/AMD64 Platform Optimization
+                            </div>
+                        </div>
+                        
+                        <div class="layer hardware">
+                            <div class="layer-title">💻 Hardware Layer</div>
+                            <div class="component-row">
+                                <div class="component">CPU</div>
+                                <div class="component">RAM</div>
+                                <div class="component">SSD/Storage</div>
+                                <div class="component">GPU</div>
+                                <div class="component">Network Card</div>
+                                <div class="component">Peripherals</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Slide 3: Process Scheduling -->
+            <div class="slide">
+                <div class="slide-content-wrapper">
+                    <div class="slide-header">
+                        <h1>Process Scheduling Architecture</h1>
+                        <p class="subtitle">Three-Level Scheduling System</p>
+                    </div>
+                    
+                    <div class="slide-body">
+                        <div class="schedulers-grid">
+                            <div class="scheduler-box long-term">
+                                <div class="scheduler-title">📥 Long-Term Scheduler</div>
+                                <div class="scheduler-content">
+                                    <strong>Role:</strong> Admits new processes into the system
+                                    <strong>Frequency:</strong> Seconds / Minutes
+                                    <strong>Impact:</strong> Prevents system overload and maintains stability
+                                    <strong>Key:</strong> Resource gating
+                                </div>
+                            </div>
+                            
+                            <div class="scheduler-box mid-term">
+                                <div class="scheduler-title">🔄 Mid-Term Scheduler</div>
+                                <div class="scheduler-content">
+                                    <strong>Role:</strong> Manages memory swapping (RAM ↔ Disk)
+                                    <strong>Frequency:</strong> Seconds
+                                    <strong>Impact:</strong> Maintains system performance during high load
+                                    <strong>Key:</strong> Memory balancing
+                                </div>
+                            </div>
+                            
+                            <div class="scheduler-box short-term">
+                                <div class="scheduler-title">⚡ Short-Term Scheduler (CFS)</div>
+                                <div class="scheduler-content">
+                                    <strong>Role:</strong> Selects processes for CPU execution
+                                    <strong>Frequency:</strong> Milliseconds
+                                    <strong>Impact:</strong> Responsive desktop experience
+                                    <strong>Key:</strong> Fair CPU time allocation
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 30px;">
+                            <h2 style="font-size: 2em; color: #1a3a52; margin-bottom: 20px;">Process Control Block (PCB)</h2>
+                            <div class="pcb-grid">
+                                <div class="pcb-box">
+                                    <h3>📌 Identification</h3>
+                                    <ul>
+                                        <li>Process ID (PID)</li>
+                                        <li>Parent PID</li>
+                                        <li>User/Group IDs</li>
+                                        <li>Priority Level</li>
+                                        <li>Creation Time</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="pcb-box">
+                                    <h3>⚙️ Execution State</h3>
+                                    <ul>
+                                        <li>Process State (Running/Ready/Blocked)</li>
+                                        <li>Program Counter</li>
+                                        <li>CPU Registers</li>
+                                        <li>Stack Pointer</li>
+                                        <li>Context Switch Count</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="pcb-box">
+                                    <h3>💾 Memory Info</h3>
+                                    <ul>
+                                        <li>Virtual Memory Addresses</li>
+                                        <li>Page Tables</li>
+                                        <li>Memory Segments (Text/Data/Stack/Heap)</li>
+                                        <li>Memory Limits</li>
+                                        <li>Shared Memory Pointers</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="pcb-box">
+                                    <h3>📊 I/O Status</h3>
+                                    <ul>
+                                        <li>File Descriptor Table</li>
+                                        <li>Open Files List</li>
+                                        <li>Current Directory</li>
+                                        <li>Signal Handlers</li>
+                                        <li>I/O Operations Pending</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="context-note">
+                            <strong>Context Switching:</strong>
+                            <p>PCB enables efficient context switching by saving the current process state and restoring the next process's state, maintaining CPU execution continuity</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Slide 4: Threads -->
+            <div class="slide">
+                <div class="slide-content-wrapper">
+                    <div class="slide-header">
+                        <h1>Thread Design & Concurrency and Light Weight Processes</h1>
+                        <p class="subtitle">Kernel Threads vs User Threads</p>
+                    </div>
+                    
+                    <div class="slide-body">
+                        <div class="threads-grid">
+                            <div class="thread-box kernel">
+                                <h3>⚙️ Kernel Threads</h3>
+                                
+                                <div class="thread-section">
+                                    <div class="thread-section-title">✓ Managed by Kernel</div>
+                                    <ul>
+                                        <li>Created and scheduled directly by kernel</li>
+                                        <li>No library overhead - pure kernel operation</li>
+                                        <li>Run in kernel mode with full CPU privileges</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="thread-section">
+                                    <div class="thread-section-title">✓ Common Examples</div>
+                                    <ul>
+                                        <li>kworker - background task handling</li>
+                                        <li>ksoftirqd - interrupt processing</li>
+                                        <li>kswapd - memory swapping daemon</li>
+                                        <li>pdflush - page cache flushing</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="thread-section">
+                                    <div class="thread-section-title">✓ Use Cases</div>
+                                    <ul>
+                                        <li>Critical system operations</li>
+                                        <li>Interrupt handling</li>
+                                        <li>Memory management</li>
+                                        <li>I/O scheduling</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="thread-box user">
+                                <h3>📚 User Threads</h3>
+                                
+                                <div class="thread-section">
+                                    <div class="thread-section-title">✓ Managed by Libraries</div>
+                                    <ul>
+                                        <li>Created via libraries like pthreads (POSIX)</li>
+                                        <li>Mapped to kernel threads for execution</li>
+                                        <li>Run in user mode with restricted access</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="thread-section">
+                                    <div class="thread-section-title">✓ Common Creation</div>
+                                    <ul>
+                                        <li>pthread_create() - POSIX threads</li>
+                                        <li>Web browsers & servers</li>
+                                        <li>Desktop GUI applications</li>
+                                        <li>Database connection handlers</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="thread-section">
+                                    <div class="thread-section-title">✓ Advantages</div>
+                                    <ul>
+                                        <li>Lightweight - less memory overhead</li>
+                                        <li>Fast creation and switching</li>
+                                        <li>Shared memory synchronization</li>
+                                        <li>Responsive user experience</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Controls -->
+        <div class="controls">
+            <button class="nav-button" id="prevBtn" onclick="changeSlide(-1)">← Previous</button>
+            <div class="slide-dots">
+                <div class="dot active" onclick="goToSlide(0)"></div>
+                <div class="dot" onclick="goToSlide(1)"></div>
+                <div class="dot" onclick="goToSlide(2)"></div>
+                <div class="dot" onclick="goToSlide(3)"></div>
+            </div>
+            <div class="slide-counter">
+                <span id="currentSlide">1</span> / 4
+            </div>
+            <button class="nav-button" id="nextBtn" onclick="changeSlide(1)">Next →</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 4;
+        
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.dot');
+            
+            if (n >= totalSlides) currentSlide = 0;
+            if (n < 0) currentSlide = totalSlides - 1;
+            
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = currentSlide + 1;
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+        
+        function changeSlide(n) {
+            currentSlide += n;
+            showSlide(currentSlide);
+        }
+        
+        function goToSlide(n) {
+            currentSlide = n;
+            showSlide(currentSlide);
+        }
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowLeft') changeSlide(-1);
+            if (event.key === 'ArrowRight') changeSlide(1);
+        });
+        
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
